@@ -1,6 +1,8 @@
 package models
 
+import "gorm.io/gorm"
+
 type Player struct {
-	ID   int    `gorm:"primarykey" json:"id"`
-	Name string `json:"name"`
+	gorm.Model        // use built in struct
+	Name       string `gorm:"unique;not null" json:"name"`
 }
