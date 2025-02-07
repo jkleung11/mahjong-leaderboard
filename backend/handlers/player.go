@@ -35,18 +35,19 @@ func (h *PlayerHandler) CreatePlayer(c *gin.Context) {
 
 func (h *PlayerHandler) GetPlayer(c *gin.Context) {
 	// check if id or name to get player
-	query := c.Param("query")
+	identifier := c.Param("identifier")
+	fmt.Printf("identifier is %v", identifier)
 	var player models.Player
 
-	if _, err := strconv.Atoi(query); err != nil {
+	if id, err := strconv.Atoi(identifier); err == nil {
 		// number, so just query by primary key
-		if err := h.DB.First(&player, query).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("%v id not found", query)})
+		if err := h.DB.First(&player, id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("id: %v not found", identifier)})
 			return
 		}
 	} else {
-		if err := h.DB.Where("name = ?").First(&player).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("%v name not found", query)})
+		if err := h.DB.Where("name = ?", identifier).First(&player).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("name: %v not found", identifier)})
 			return
 		}
 	}

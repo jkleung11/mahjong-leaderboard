@@ -13,7 +13,7 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	playerHandler := handlers.PlayerHandler{DB: db}
 
 	// Player routes
-	r.GET("/players/:query", playerHandler.GetPlayer)
+	r.GET("/players/:identifier", playerHandler.GetPlayer)
 	r.POST("/players", playerHandler.CreatePlayer)
 	r.PUT("/players", playerHandler.UpdatePlayer)
 
