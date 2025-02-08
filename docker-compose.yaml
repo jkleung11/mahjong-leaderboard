@@ -1,0 +1,10 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    volumes:
+      - ./backend/db:/app/db  # Persist SQLite database
+    environment:
+      - SQLITE_DB_PATH=/app/db/mahjong.db
+    ports:
+      - "8080:8080"
