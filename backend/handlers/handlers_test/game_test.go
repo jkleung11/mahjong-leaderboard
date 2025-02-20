@@ -36,10 +36,9 @@ func TestCreateGame(t *testing.T) {
 		"winner_id":      1,
 		"winning_points": 3,
 	}
-	jsonData, _ := json.Marshal(gameData)
+	jsonBody, _ := json.Marshal(gameData)
 
-	req, _ := http.NewRequest("POST", "/games", bytes.NewBuffer(jsonData))
-
+	req, _ := http.NewRequest("POST", "/games", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	resp := httptest.NewRecorder()
 	router.ServeHTTP(resp, req)
@@ -67,4 +66,18 @@ func TestCreateGame(t *testing.T) {
 	assert.Equal(t, responseStruct.Game.Date, dbGame.Date, "DB date mismatch")
 	assert.Equal(t, responseStruct.Game.WinnerID, dbGame.WinnerID, "DB winner id mismatch")
 	assert.Equal(t, responseStruct.Game.WinningPoints, dbGame.WinningPoints, "DB winning points mismatch")
+
+	// verify missing fields raise errors
+	missingField := map[string]interface{}{
+		"date":      "2025-02-10T14:00:00Z",
+		"winner_id": 1,
+	}
+	jsonBody, _ = json.Marshal(missingField)
+	req = httptest.NewRequest("POST", "/games", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp = httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+	assert.Equal(t, http.StatusBadRequest, resp.Code, "Expected bad request for missing field")
+
 }

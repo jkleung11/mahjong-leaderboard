@@ -1,8 +1,9 @@
-FROM golang:1.23
-
+# build stage
+FROM golang:1.23-alpine AS builder
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y sqlite3
+RUN apk add --no-cache gcc musl-dev sqlite sqlite-dev
+
 COPY go.mod go.sum ./
 RUN go mod download
 
@@ -10,6 +11,12 @@ COPY . .
 
 RUN go build -o main .
 
-EXPOSE 8080
+# runtime stage
+FROM alpine:latest
 
+WORKDIR /root/
+RUN apk add --no-cache sqlite
+
+COPY --from=builder /app/main .
+EXPOSE 8080
 CMD ["./main"]

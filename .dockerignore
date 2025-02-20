@@ -1,0 +1,30 @@
+# Ignore Go build artifacts
+*.exe
+*.out
+*.o
+*.a
+*.so
+
+# Ignore compiled binaries
+main
+bin/
+tmp/
+
+# Ignore dependencies (they are installed in the container)
+vendor/
+node_modules/
+
+# Ignore local environment files
+.env
+*.log
+.DS_Store
+
+# Ignore Git files
+.git
+.gitignore
+.github
+
+# Ignore IDE/editor-specific files
+.vscode/
+.idea/
+*.swp

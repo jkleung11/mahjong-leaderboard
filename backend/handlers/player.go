@@ -42,12 +42,12 @@ func (h *PlayerHandler) GetPlayer(c *gin.Context) {
 	if id, err := strconv.Atoi(identifier); err == nil {
 		// number, so just query by primary key
 		if err := h.DB.First(&player, id).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("id: %v not found", identifier)})
+			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("id %v not found", identifier)})
 			return
 		}
 	} else {
 		if err := h.DB.Where("name = ?", identifier).First(&player).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("name: %v not found", identifier)})
+			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("name %v not found", identifier)})
 			return
 		}
 	}
@@ -72,7 +72,7 @@ func (h *PlayerHandler) UpdatePlayer(c *gin.Context) {
 	}
 
 	var existing models.Player
-	if err := h.DB.Where("name = ?", request.NewName).First(&existing).Error; err != nil {
+	if err := h.DB.Where("name = ?", request.NewName).First(&existing).Error; err == nil {
 		c.JSON(http.StatusConflict, gin.H{"error": fmt.Sprintf("%v already exists", request.NewName)})
 		return
 	}
