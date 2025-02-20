@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mattn/go-sqlite3"
 	"gorm.io/gorm"
 )
 
@@ -39,10 +40,12 @@ func (h *GameHandler) CreateGame(c *gin.Context) {
 		WinningPoints: request.WinningPoints,
 	}
 
-	// TODO: update ot check for valid winner id
 	if err := h.DB.Create(&game).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		// parse db error specific to sqlite
+		if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.Code == sqlite3.ErrConstraint {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid winner_id, player does not exist"})
+			return
+		}
 	}
 	c.JSON(http.StatusCreated, gin.H{"message": "game created successfully", "game": game})
 }
