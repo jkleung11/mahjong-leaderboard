@@ -38,5 +38,10 @@ func main() {
 
 // RunMigrations applies database migrations
 func RunMigrations(db *gorm.DB) error {
-	return db.AutoMigrate(&models.Player{}, &models.Game{})
+	modelsToMigrate := []interface{}{
+		&models.Player{},
+		&models.Game{},
+		&models.GamePlayers{},
+	}
+	return db.AutoMigrate(modelsToMigrate...)
 }
