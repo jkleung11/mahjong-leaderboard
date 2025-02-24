@@ -9,12 +9,12 @@ package handlers
 import (
 	"fmt"
 	"mahjong-leaderboard-backend/models"
+	"mahjong-leaderboard-backend/services"
 	"net/http"
 	"slices"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mattn/go-sqlite3"
 	"gorm.io/gorm"
 )
 
@@ -23,59 +23,89 @@ type GameHandler struct {
 }
 
 type GameRequest struct {
-	// Information provided from user on
+	// Information provided from user
 	Date          string   `json:"date" binding:"required"`
-	Winner        *string  `json:"winner" binding:"required"`
-	WinningPoints *uint    `json:"winning_points" binding:"required"`
+	Winner        *string  `json:"winner" binding:"omitempty"`
+	WinningPoints *uint    `json:"winning_points" binding:"omitempty"`
 	Players       []string `json:"players" binding:"required"`
 }
 
-type GamePayload struct {
-	// The actual payload for the record in the games table
-	Date          string `json:"date" binding:"required"`
-	WinnerID      *uint  `json:"winner_id" binding:"required"`
-	WinningPoints *uint  `json:"winning_points" binding:"required"`
-}
-
-func ValidateGameRequest(request GameRequest) error {
-	if len(request.Players) != 4 {
-		return fmt.Errorf("A game must have exactly 4 players")
+func validateGameRequest(request GameRequest) error {
+	// check user input for who played in a game winning details
+	if (request.Winner == nil) != (request.WinningPoints == nil) {
+		return fmt.Errorf("winner and points must both be provided together")
 	}
-	if len(request.Winner) > 0 {
-		if slices.Contains(request.Players, &request.Winner) {
-			return nil
+	if len(request.Players) != 4 {
+		return fmt.Errorf("a game must have exactly 4 players")
+	}
+	if request.Winner != nil {
+		if !slices.Contains(request.Players, *request.Winner) {
+			return fmt.Errorf("winner must be one of the players in the game")
 		}
 	}
-
 	return nil
+}
+
+func getWinnerID(winner *string, players map[string]uint) *uint {
+	// given a map of player names and ids, return the winner's id
+	if winner == nil {
+		return nil
+	}
+	id := players[*winner]
+	return &id
 }
 
 // create a game
 func (h *GameHandler) CreateGame(c *gin.Context) {
-	var payload GamePayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing required fields in payload"})
+	var request GameRequest
+	// checks and early exits
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing required fields in games request"})
 		return
 	}
 
-	parsedDate, err := time.Parse(time.RFC3339, payload.Date)
+	parsedDate, err := time.Parse(time.RFC3339, request.Date)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date format, need RFC3339"})
 		return
 	}
-	game := models.Game{
-		Date:          parsedDate,
-		WinnerID:      payload.WinnerID,
-		WinningPoints: payload.WinningPoints,
+
+	if err := validateGameRequest(request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	// get the ids of players in the game
+	players, err := services.QueryPlayerIDsByNames(h.DB, request.Players)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
-	if err := h.DB.Create(&game).Error; err != nil {
-		// parse db error specific to sqlite
-		if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.Code == sqlite3.ErrConstraint {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid winner_id, player does not exist"})
-			return
-		}
+	if len(players) != 4 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "a game must have four registered players"})
 	}
+
+	// create the structs needed for our insertions
+	winnerID := getWinnerID(request.Winner, players)
+	game := models.Game{Date: parsedDate, WinnerID: winnerID, WinningPoints: request.WinningPoints}
+	var gamePlayers []models.GamePlayers
+	for _, playerID := range players {
+		gamePlayers = append(gamePlayers, models.GamePlayers{GameID: game.ID, PlayerID: playerID})
+	}
+
+	transaction := h.DB.Begin()
+	if err := transaction.Create(&game).Error; err != nil {
+		// issue with creating game, rollback
+		transaction.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := transaction.Create(&gamePlayers).Error; err != nil {
+		transaction.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+
 	c.JSON(http.StatusCreated, gin.H{"message": "game created successfully", "game": game})
 }
 
