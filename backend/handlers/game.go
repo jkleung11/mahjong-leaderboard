@@ -46,13 +46,10 @@ func validateGameRequest(request GameRequest) error {
 	return nil
 }
 
-func getWinnerID(winner *string, players map[string]uint) *uint {
-	// given a map of player names and ids, return the winner's id
-	if winner == nil {
-		return nil
-	}
-	id := players[*winner]
-	return &id
+func generateGameID(db *gorm.DB) uint {
+	var latestGame models.GamePlayer
+	db.Order("game_id DESC").First(&latestGame)
+	return latestGame.GameID + 1
 }
 
 // create a game
@@ -80,47 +77,39 @@ func (h *GameHandler) CreateGame(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	// a supplied player isn't registered
 	if len(players) != 4 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "a game must have four registered players"})
-	}
-
-	// create the structs needed for our insertions
-	winnerID := getWinnerID(request.Winner, players)
-	game := models.Game{Date: parsedDate, WinnerID: winnerID, WinningPoints: request.WinningPoints}
-	var gamePlayers []models.GamePlayers
-	for _, playerID := range players {
-		gamePlayers = append(gamePlayers, models.GamePlayers{GameID: game.ID, PlayerID: playerID})
-	}
-
-	transaction := h.DB.Begin()
-	if err := transaction.Create(&game).Error; err != nil {
-		// issue with creating game, rollback
-		transaction.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	// create the structs needed for our insertions
+	winnerID := services.GetWinnerID(request.Winner, players)
+	gameID := generateGameID(h.DB)
+	gamePlayers := services.CreateGamePlayers(gameID, parsedDate, players, winnerID, request.WinningPoints)
+
+	transaction := h.DB.Begin()
 	if err := transaction.Create(&gamePlayers).Error; err != nil {
 		transaction.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
+	transaction.Commit()
+	gameResponse := services.FormatGameResponse(gameID, players, gamePlayers)
 
-	c.JSON(http.StatusCreated, gin.H{"message": "game created successfully", "game": game})
+	c.JSON(http.StatusCreated, gin.H{"game": gameResponse})
 }
 
 // get a game based on id
-func (h *GameHandler) GetGameByID(c *gin.Context) {
-	id := c.Param("id")
-	var game models.Game
+// func (h *GameHandler) GetGameByID(c *gin.Context) {
+// 	id := c.Param("id")
 
-	if err := h.DB.First(&game, id).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("game with id: %v not found", id)})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		}
-		return
-	}
-	c.JSON(http.StatusFound, game)
-}
+// 	if err := h.DB.First(&game, id).Error; err != nil {
+// 		if err == gorm.ErrRecordNotFound {
+// 			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("game with id: %v not found", id)})
+// 		} else {
+// 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 		}
+// 		return
+// 	}
+// 	c.JSON(http.StatusFound, game)
+// }
