@@ -5,6 +5,7 @@ import (
 	"mahjong-leaderboard-backend/models"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -21,6 +22,8 @@ func (h *PlayerHandler) CreatePlayer(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	// ensure names are created with lower case
+	player.Name = strings.ToLower(player.Name)
 
 	var existing models.Player
 	if err := h.DB.Where("name = ?", player.Name).First(&existing).Error; err == nil {
@@ -46,6 +49,7 @@ func (h *PlayerHandler) GetPlayer(c *gin.Context) {
 			return
 		}
 	} else {
+		identifier = strings.ToLower(identifier)
 		if err := h.DB.Where("name = ?", identifier).First(&player).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("name %v not found", identifier)})
 			return
@@ -66,18 +70,18 @@ func (h *PlayerHandler) UpdatePlayer(c *gin.Context) {
 	}
 
 	var player models.Player
-	if err := h.DB.Where("name = ?", request.CurrentName).First(&player).Error; err != nil {
+	if err := h.DB.Where("name = ?", strings.ToLower(request.CurrentName)).First(&player).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("%v player not found", request.CurrentName)})
 		return
 	}
 
 	var existing models.Player
-	if err := h.DB.Where("name = ?", request.NewName).First(&existing).Error; err == nil {
+	if err := h.DB.Where("name = ?", strings.ToLower(request.NewName)).First(&existing).Error; err == nil {
 		c.JSON(http.StatusConflict, gin.H{"error": fmt.Sprintf("%v already exists", request.NewName)})
 		return
 	}
 
-	player.Name = request.NewName
+	player.Name = strings.ToLower(request.NewName)
 
 	if err := h.DB.Save(&player).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update player"})

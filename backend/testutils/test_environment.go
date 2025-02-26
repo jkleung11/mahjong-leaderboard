@@ -1,8 +1,12 @@
 package testutils
 
 import (
+	"bytes"
+	"encoding/json"
 	"log"
 	"mahjong-leaderboard-backend/handlers"
+	"net/http"
+	"net/http/httptest"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/sqlite"
@@ -32,9 +36,21 @@ func SetupTestEnvironment(models []interface{}) (*gorm.DB, *gin.Engine, error) {
 	router.POST("/players", playerHandler.CreatePlayer)
 	router.PUT("/players", playerHandler.UpdatePlayer)
 	// game routes
-	router.GET("/games/:id", gameHandler.GetGameByID)
 	router.POST("/games", gameHandler.CreateGame)
 
 	return db, router, nil
 
+}
+
+func CreateTestPlayers(router *gin.Engine, playerNames []string) {
+	for _, name := range playerNames {
+		playerData := map[string]string{"name": name}
+		jsonBody, _ := json.Marshal(playerData)
+
+		req, _ := http.NewRequest("POST", "/players", bytes.NewBuffer(jsonBody))
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+		router.ServeHTTP(resp, req)
+		log.Printf("created test player %v", name)
+	}
 }
