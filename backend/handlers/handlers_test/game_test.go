@@ -29,7 +29,6 @@ func TestCreateGame(t *testing.T) {
 		t.Fatalf("Failed to set up test environment %v", err)
 	}
 
-	defer func() { db.Migrator().DropTable(testModels...) }()
 	playerNames := []string{"leo", "raph", "don", "mich"}
 	testutils.CreateTestPlayers(router, playerNames)
 
@@ -64,6 +63,11 @@ func TestCreateGame(t *testing.T) {
 			assert.Equal(t, player.Result, "loss")
 		}
 	}
+	defer func() {
+		if err := db.Migrator().DropTable(testModels...); err != nil {
+			t.Fatalf("Error dropping tables after test: %v", err)
+		}
+	}()
 }
 
 func TestCreateGameMissingPlayer(t *testing.T) {
@@ -75,7 +79,6 @@ func TestCreateGameMissingPlayer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to set up test environment %v", err)
 	}
-	defer func() { db.Migrator().DropTable(testModels...) }()
 
 	testutils.CreateTestPlayers(router, []string{"leo", "raph", "don", "mich"})
 	missingPlayer := []string{"leo", "raph", "don", "splinter"}
@@ -92,6 +95,12 @@ func TestCreateGameMissingPlayer(t *testing.T) {
 	router.ServeHTTP(resp, req)
 	assert.Equal(t, http.StatusBadRequest, resp.Code, "expected bad request due to unregistered player")
 
+	defer func() {
+		if err := db.Migrator().DropTable(testModels...); err != nil {
+			t.Fatalf("Error dropping tables after test: %v", err)
+		}
+	}()
+
 }
 
 func TestCreateGameMissingPoints(t *testing.T) {
@@ -99,7 +108,7 @@ func TestCreateGameMissingPoints(t *testing.T) {
 		models.Player{},
 		models.GamePlayer{},
 	}
-	_, router, err := testutils.SetupTestEnvironment(testModels)
+	db, router, err := testutils.SetupTestEnvironment(testModels)
 	if err != nil {
 		t.Fatalf("Failed to set up test environment %v", err)
 	}
@@ -115,4 +124,9 @@ func TestCreateGameMissingPoints(t *testing.T) {
 	resp := httptest.NewRecorder()
 	router.ServeHTTP(resp, req)
 	assert.Equal(t, http.StatusBadRequest, resp.Code)
+	defer func() {
+		if err := db.Migrator().DropTable(testModels...); err != nil {
+			t.Fatalf("Error dropping tables after test: %v", err)
+		}
+	}()
 }

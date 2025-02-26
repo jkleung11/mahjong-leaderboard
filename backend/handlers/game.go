@@ -98,18 +98,3 @@ func (h *GameHandler) CreateGame(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gameResponse)
 }
-
-// get a game based on id
-// func (h *GameHandler) GetGameByID(c *gin.Context) {
-// 	id := c.Param("id")
-
-// 	if err := h.DB.First(&game, id).Error; err != nil {
-// 		if err == gorm.ErrRecordNotFound {
-// 			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("game with id: %v not found", id)})
-// 		} else {
-// 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 		}
-// 		return
-// 	}
-// 	c.JSON(http.StatusFound, game)
-// }

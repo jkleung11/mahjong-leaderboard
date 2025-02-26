@@ -19,8 +19,6 @@ func TestCreatePlayer(t *testing.T) {
 		t.Fatalf("Failed to set up test environment: %v", err)
 	}
 
-	defer func() { db.Migrator().DropTable(testModels...) }() // drop table after test
-
 	playerData := map[string]string{"name": "bob"}
 	jsonBody, _ := json.Marshal(playerData)
 
@@ -30,6 +28,12 @@ func TestCreatePlayer(t *testing.T) {
 	router.ServeHTTP(resp, req)
 
 	assert.Equal(t, http.StatusCreated, resp.Code, "Expected 201 created")
+
+	defer func() {
+		if err := db.Migrator().DropTable(testModels...); err != nil {
+			t.Fatalf("Error dropping tables after test: %v", err)
+		}
+	}()
 }
 
 func TestGetPlayerByName(t *testing.T) {
@@ -45,13 +49,18 @@ func TestGetPlayerByName(t *testing.T) {
 	}
 
 	db.Create(&testPlayer)
-	defer func() { db.Migrator().DropTable(&models.Player{}) }() // drop table after test
 
 	req := httptest.NewRequest("GET", "/players/bob", nil)
 	resp := httptest.NewRecorder()
 	router.ServeHTTP(resp, req)
 
 	assert.Equal(t, http.StatusOK, resp.Code, "Expected ok")
+
+	defer func() {
+		if err := db.Migrator().DropTable(testModels...); err != nil {
+			t.Fatalf("Error dropping tables after test: %v", err)
+		}
+	}()
 
 }
 
@@ -68,7 +77,6 @@ func TestUpdatePlayerName(t *testing.T) {
 
 	db.Create(&testPlayer1)
 	db.Create(&testPlayer2)
-	defer func() { db.Migrator().DropTable(&models.Player{}) }()
 
 	// good update
 	updateData := map[string]string{
@@ -107,5 +115,11 @@ func TestUpdatePlayerName(t *testing.T) {
 	resp = httptest.NewRecorder()
 	router.ServeHTTP(resp, req)
 	assert.Equal(t, http.StatusConflict, resp.Code, "expect conflict in response")
+
+	defer func() {
+		if err := db.Migrator().DropTable(testModels...); err != nil {
+			t.Fatalf("Error dropping tables after test: %v", err)
+		}
+	}()
 
 }
