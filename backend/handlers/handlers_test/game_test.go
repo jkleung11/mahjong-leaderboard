@@ -13,9 +13,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type ErrorMessage struct {
+	Error string `json:"error"`
+}
+
 func TestCreateGame(t *testing.T) {
 
-	testModels := []interface{}{
+	testModels := []any{
 		&models.Player{},
 		&models.GamePlayer{},
 	}
@@ -63,13 +67,13 @@ func TestCreateGame(t *testing.T) {
 }
 
 func TestCreateGameMissingPlayer(t *testing.T) {
-	testModels := []interface{}{
+	testModels := []any{
 		models.Player{},
 		models.GamePlayer{},
 	}
 	db, router, err := testutils.SetupTestEnvironment(testModels)
 	if err != nil {
-		t.Fatalf("failed to set up test environment")
+		t.Fatalf("Failed to set up test environment %v", err)
 	}
 	defer func() { db.Migrator().DropTable(testModels...) }()
 
@@ -90,27 +94,25 @@ func TestCreateGameMissingPlayer(t *testing.T) {
 
 }
 
-// func TestCreateGameMissingField(t *testing.T) {
-// 	// verify missing fields raise errors
-// 	testModels := []interface{}{
-// 		&models.Player{},
-// 		&models.Game{},
-// 	}
-
-// 	_, router, err := testutils.SetupTestEnvironment(testModels)
-// 	if err != nil {
-// 		t.Fatalf("failed to set up test environment: %v", err)
-// 	}
-
-// 	missingField := map[string]interface{}{
-// 		"date":      "2025-02-10T14:00:00Z",
-// 		"winner_id": 1,
-// 	}
-// 	jsonBody, _ := json.Marshal(missingField)
-// 	req := httptest.NewRequest("POST", "/games", bytes.NewBuffer(jsonBody))
-// 	req.Header.Set("Content-Type", "application/json")
-
-// 	resp := httptest.NewRecorder()
-// 	router.ServeHTTP(resp, req)
-// 	assert.Equal(t, http.StatusBadRequest, resp.Code, "Expected bad request for missing field")
-// }
+func TestCreateGameMissingPoints(t *testing.T) {
+	testModels := []any{
+		models.Player{},
+		models.GamePlayer{},
+	}
+	_, router, err := testutils.SetupTestEnvironment(testModels)
+	if err != nil {
+		t.Fatalf("Failed to set up test environment %v", err)
+	}
+	playerNames := []string{"leo", "raph", "don", "mich"}
+	testutils.CreateTestPlayers(router, playerNames)
+	gameData := map[string]interface{}{
+		"date":    "2025-02-10T14:00:00Z",
+		"winner":  "leo",
+		"players": playerNames,
+	}
+	jsonBody, _ := json.Marshal(gameData)
+	req, _ := http.NewRequest("POST", "/games", bytes.NewBuffer(jsonBody))
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+	assert.Equal(t, http.StatusBadRequest, resp.Code)
+}

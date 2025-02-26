@@ -13,7 +13,7 @@ import (
 )
 
 func TestCreatePlayer(t *testing.T) {
-	testModels := []interface{}{&models.Player{}}
+	testModels := []any{models.Player{}}
 	db, router, err := testutils.SetupTestEnvironment(testModels)
 	if err != nil {
 		t.Fatalf("Failed to set up test environment: %v", err)
@@ -33,7 +33,7 @@ func TestCreatePlayer(t *testing.T) {
 }
 
 func TestGetPlayerByName(t *testing.T) {
-	testModels := []interface{}{&models.Player{}}
+	testModels := []any{models.Player{}}
 	db, router, err := testutils.SetupTestEnvironment(testModels)
 
 	if err != nil {
@@ -56,7 +56,7 @@ func TestGetPlayerByName(t *testing.T) {
 }
 
 func TestUpdatePlayerName(t *testing.T) {
-	testModels := []interface{}{&models.Player{}}
+	testModels := []any{models.Player{}}
 	db, router, err := testutils.SetupTestEnvironment(testModels)
 
 	if err != nil {
