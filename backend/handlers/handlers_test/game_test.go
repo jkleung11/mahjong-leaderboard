@@ -62,6 +62,34 @@ func TestCreateGame(t *testing.T) {
 	}
 }
 
+func TestCreateGameMissingPlayer(t *testing.T) {
+	testModels := []interface{}{
+		models.Player{},
+		models.GamePlayer{},
+	}
+	db, router, err := testutils.SetupTestEnvironment(testModels)
+	if err != nil {
+		t.Fatalf("failed to set up test environment")
+	}
+	defer func() { db.Migrator().DropTable(testModels...) }()
+
+	testutils.CreateTestPlayers(router, []string{"leo", "raph", "don", "mich"})
+	missingPlayer := []string{"leo", "raph", "don", "splinter"}
+	gameData := map[string]interface{}{
+		"date":           "2025-02-10T14:00:00Z",
+		"winner":         "leo",
+		"winning_points": 5,
+		"players":        missingPlayer,
+	}
+	jsonBody, _ := json.Marshal(gameData)
+
+	req, _ := http.NewRequest("POST", "/games", bytes.NewBuffer(jsonBody))
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+	assert.Equal(t, http.StatusBadRequest, resp.Code, "expected bad request due to unregistered player")
+
+}
+
 // func TestCreateGameMissingField(t *testing.T) {
 // 	// verify missing fields raise errors
 // 	testModels := []interface{}{
@@ -85,35 +113,4 @@ func TestCreateGame(t *testing.T) {
 // 	resp := httptest.NewRecorder()
 // 	router.ServeHTTP(resp, req)
 // 	assert.Equal(t, http.StatusBadRequest, resp.Code, "Expected bad request for missing field")
-// }
-
-// func TestCreateGameBadPlayer(t *testing.T) {
-// 	testModels := []interface{}{
-// 		&models.Player{},
-// 		&models.Game{},
-// 	}
-
-// 	_, router, err := testutils.SetupTestEnvironment(testModels)
-// 	if err != nil {
-// 		t.Fatalf("failed to set up test environment: %v", err)
-// 	}
-
-// 	playerData := map[string]string{"name": "bob"}
-// 	jsonBody, _ := json.Marshal(playerData)
-
-// 	req := httptest.NewRequest("POST", "/players", bytes.NewBuffer(jsonBody))
-// 	req.Header.Set("Content-Type", "application/json")
-// 	resp := httptest.NewRecorder()
-// 	router.ServeHTTP(resp, req)
-
-// 	gameData := map[string]interface{}{
-// 		"date":      "2025-02-10T14:00:00Z",
-// 		"winner_id": 2,
-// 	}
-// 	jsonBody, _ = json.Marshal(gameData)
-// 	req = httptest.NewRequest("POST", "/games", bytes.NewBuffer(jsonBody))
-// 	req.Header.Set("Content-Type", "application/json")
-// 	resp = httptest.NewRecorder()
-// 	router.ServeHTTP(resp, req)
-// 	assert.Equal(t, http.StatusBadRequest, resp.Code, "expect bad request for non existing winner")
 // }
