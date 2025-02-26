@@ -96,7 +96,7 @@ func (h *GameHandler) CreateGame(c *gin.Context) {
 	transaction.Commit()
 	gameResponse := services.FormatGameResponse(gameID, players, gamePlayers)
 
-	c.JSON(http.StatusCreated, gin.H{"game": gameResponse})
+	c.JSON(http.StatusCreated, gameResponse)
 }
 
 // get a game based on id
