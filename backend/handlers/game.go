@@ -98,3 +98,13 @@ func (h *GameHandler) CreateGame(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gameDetails)
 }
+
+// func (h *GameHandler) GetGameByID(c *gin.Context) {
+// 	gameID := c.Param("id")
+// 	if _, err := strconv.Atoi(gameID); err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "id must be integer"})
+// 		return
+// 	}
+// 	var gameDetails dtos.GameDetails
+
+// }
