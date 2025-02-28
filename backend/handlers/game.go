@@ -94,7 +94,7 @@ func (h *GameHandler) CreateGame(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 	transaction.Commit()
-	gameResponse := services.FormatGameResponse(gameID, players, gamePlayers)
+	gameDetails := services.FormatGameDetails(gameID, parsedDate, request.Winner, players, gamePlayers)
 
-	c.JSON(http.StatusCreated, gameResponse)
+	c.JSON(http.StatusCreated, gameDetails)
 }

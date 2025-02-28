@@ -3,8 +3,8 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"mahjong-leaderboard-backend/dtos"
 	"mahjong-leaderboard-backend/models"
-	"mahjong-leaderboard-backend/services"
 	"mahjong-leaderboard-backend/testutils"
 	"net/http"
 	"net/http/httptest"
@@ -47,20 +47,20 @@ func TestCreateGame(t *testing.T) {
 
 	assert.Equal(t, http.StatusCreated, resp.Code, "Expected 201 created")
 
-	var responseStruct services.GameResponse
+	var responseStruct dtos.GameDetails
 	err = json.Unmarshal(resp.Body.Bytes(), &responseStruct)
 	if err != nil {
 		t.Fatalf("failed to parse response body")
 	}
 	assert.NotZero(t, responseStruct.GameID, "Expected non-zero game ID")
-	for _, player := range responseStruct.Players {
-		if player.Name == "leo" {
-			assert.Equal(t, "win", player.Result)
-			assert.Equal(t, 5, int(player.PointsEarned))
-			assert.Equal(t, "leo", player.Name)
+	for _, playerResult := range responseStruct.Results {
+		if playerResult.Name == "leo" {
+			assert.Equal(t, "win", playerResult.Result)
+			assert.Equal(t, 5, int(playerResult.PointsEarned))
+			assert.Equal(t, "leo", playerResult.Name)
 		} else {
-			assert.Equal(t, 0, int(player.PointsEarned))
-			assert.Equal(t, player.Result, "loss")
+			assert.Equal(t, 0, int(playerResult.PointsEarned))
+			assert.Equal(t, playerResult.Result, "loss")
 		}
 	}
 	defer func() {
