@@ -56,6 +56,11 @@ func QueryGameDetailsByGameID(db *gorm.DB, gameID uint) (*dtos.GameDetails, erro
 	if err != nil {
 		return nil, err
 	}
+
+	if len(gamePlayers) == 0 {
+		return nil, errors.New("no game found for game id")
+	}
+
 	if len(gamePlayers) != 4 {
 		return nil, errors.New("associated game id needs exactly 4 players")
 	}

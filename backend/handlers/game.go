@@ -12,6 +12,7 @@ import (
 	"mahjong-leaderboard-backend/services"
 	"net/http"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -98,13 +99,18 @@ func (h *GameHandler) CreateGame(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gameDetails)
 }
+func (h *GameHandler) GetGameDetailsByID(c *gin.Context) {
+	idStr := c.Param("id")
+	gameID, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid game id"})
+		return
+	}
+	gameDetails, err := services.QueryGameDetailsByGameID(h.DB, uint(gameID))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gameDetails)
 
-// func (h *GameHandler) GetGameByID(c *gin.Context) {
-// 	gameID := c.Param("id")
-// 	if _, err := strconv.Atoi(gameID); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "id must be integer"})
-// 		return
-// 	}
-// 	var gameDetails dtos.GameDetails
-
-// }
+}

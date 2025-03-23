@@ -19,7 +19,7 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	r.PUT("/players", playerHandler.UpdatePlayer)
 
 	// Game routes
-	r.GET("/games/:id", gameHandler.GetGameByID)
+	r.GET("/games/:id", gameHandler.GetGameDetailsByID)
 	r.POST("/games", gameHandler.CreateGame)
 
 	return r
