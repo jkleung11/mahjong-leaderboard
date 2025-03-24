@@ -37,6 +37,7 @@ func SetupTestEnvironment(models []interface{}) (*gorm.DB, *gin.Engine, error) {
 	router.PUT("/players", playerHandler.UpdatePlayer)
 	// game routes
 	router.POST("/games", gameHandler.CreateGame)
+	router.GET("/games/:id", gameHandler.GetGameDetailsByID)
 
 	return db, router, nil
 
@@ -52,5 +53,11 @@ func CreateTestPlayers(router *gin.Engine, playerNames []string) {
 		resp := httptest.NewRecorder()
 		router.ServeHTTP(resp, req)
 		log.Printf("created test player %v", name)
+	}
+}
+
+func CleanupTestTables(db *gorm.DB, models []any) {
+	for _, m := range models {
+		db.Migrator().DropTable(m)
 	}
 }
