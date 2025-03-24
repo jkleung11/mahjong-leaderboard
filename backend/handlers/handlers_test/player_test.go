@@ -29,11 +29,7 @@ func TestCreatePlayer(t *testing.T) {
 
 	assert.Equal(t, http.StatusCreated, resp.Code, "Expected 201 created")
 
-	defer func() {
-		if err := db.Migrator().DropTable(testModels...); err != nil {
-			t.Fatalf("Error dropping tables after test: %v", err)
-		}
-	}()
+	defer testutils.CleanupTestTables(db, testModels)
 }
 
 func TestGetPlayerByName(t *testing.T) {
@@ -55,13 +51,7 @@ func TestGetPlayerByName(t *testing.T) {
 	router.ServeHTTP(resp, req)
 
 	assert.Equal(t, http.StatusOK, resp.Code, "Expected ok")
-
-	defer func() {
-		if err := db.Migrator().DropTable(testModels...); err != nil {
-			t.Fatalf("Error dropping tables after test: %v", err)
-		}
-	}()
-
+	defer testutils.CleanupTestTables(db, testModels)
 }
 
 func TestUpdatePlayerName(t *testing.T) {
@@ -116,10 +106,6 @@ func TestUpdatePlayerName(t *testing.T) {
 	router.ServeHTTP(resp, req)
 	assert.Equal(t, http.StatusConflict, resp.Code, "expect conflict in response")
 
-	defer func() {
-		if err := db.Migrator().DropTable(testModels...); err != nil {
-			t.Fatalf("Error dropping tables after test: %v", err)
-		}
-	}()
+	defer testutils.CleanupTestTables(db, testModels)
 
 }
