@@ -29,3 +29,15 @@ go.work.sum
 
 # ide
 .vscode
+
+# csharp
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+*.csproj.user
+*.dbmdl
+.nuget/
+*.nupkg
+*appsettings.Development.json
