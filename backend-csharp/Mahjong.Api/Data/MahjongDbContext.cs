@@ -5,7 +5,7 @@ namespace Mahjong.Api.Data;
 
 public sealed class MahjongDbContext: DbContext
 {
-    // set pass MahjongDbContext options to the base DbContext constructor
+    // pass MahjongDbContext options to the base DbContext constructor
     public MahjongDbContext(DbContextOptions<MahjongDbContext> options): base(options)
     {
     }
