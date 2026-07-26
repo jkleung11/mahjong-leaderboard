@@ -16,10 +16,29 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: "10.0.x"
 
-      - name: Restore
-        run: dotnet restore backend-csharp/Mahjong.Api/Mahjong.Api.csproj
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
+      - name: Restore dependencies
+        run: dotnet restore mahjong-leaderboard.sln
 
       - name: Build
-        run: dotnet build backend-csharp/Mahjong.Api/Mahjong.Api.csproj --no-restore
+        run: dotnet build mahjong-leaderboard.sln --no-restore
+
+      - name: Check for model changes without a migration
+        run: >
+          dotnet ef migrations has-pending-model-changes
+          --project backend-csharp/Mahjong.Api
+          --startup-project backend-csharp/Mahjong.Api
+          --no-build
+
+      - name: Verify migrations can be applied
+        env:
+          ConnectionStrings__MahjongDb: "Data Source=${{ runner.temp }}/mahjong-ci.db"
+        run: >
+          dotnet ef database update
+          --project backend-csharp/Mahjong.Api
+          --startup-project backend-csharp/Mahjong.Api
+          --no-build
