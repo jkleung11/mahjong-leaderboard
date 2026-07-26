@@ -18,6 +18,7 @@ public sealed class MahjongDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // sticking with unique due to personal app
         modelBuilder.Entity<Player>(player =>
         {
             player.Property(p => p.Name).IsRequired();

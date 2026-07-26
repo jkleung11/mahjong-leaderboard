@@ -9,5 +9,4 @@ public sealed class PlayGroupMember
 
     public int PlayerId { get; set; }
     public Player Player { get; set; } = null!;
-
 }
