@@ -1,10 +1,9 @@
 using Mahjong.Api.Data;
-using Microsoft.EntityFrameworkCore;
-
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddDbContext<MahjongDbContext>(
-    options => options.UseSqlite(builder.Configuration.GetConnectionString("MahjongDb")));
+builder.Services.AddMahjongDatabase(
+    builder.Configuration,
+    builder.Environment);
 
 var app = builder.Build();
 
