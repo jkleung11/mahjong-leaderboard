@@ -1,8 +1,7 @@
-// utilities for standing up db
-namespace Mahjong.Api.Data;
-
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+
+namespace Mahjong.Api.Data;
 
 public static class DatabaseServiceCollectionExtensions
 {
@@ -13,7 +12,7 @@ public static class DatabaseServiceCollectionExtensions
     {
         var configuredConnectionString = configuration.GetConnectionString("MahjongDb")
             ?? throw new InvalidOperationException(
-                "Connection string 'MahjongDb' not configured"
+                "Connection string 'MahjongDb' not configured."
             );
         var resolvedConnectionString = ResolveSqliteConnectionString(
             configuredConnectionString,
@@ -25,6 +24,7 @@ public static class DatabaseServiceCollectionExtensions
 
         return services;
     }
+
     private static string ResolveSqliteConnectionString(
         string configuredConnectionString,
         string contentRootPath)
@@ -34,7 +34,7 @@ public static class DatabaseServiceCollectionExtensions
 
         if (string.IsNullOrWhiteSpace(connectionStringBuilder.DataSource))
         {
-            throw new InvalidOperationException("Connection string 'MahjongDb' missing data source");
+            throw new InvalidOperationException("Connection string 'MahjongDb' missing data source.");
         }
 
         var usesInMemoryDb = connectionStringBuilder.DataSource.Equals(
@@ -48,12 +48,14 @@ public static class DatabaseServiceCollectionExtensions
         {
             return connectionStringBuilder.ConnectionString;
         }
+
         if (!Path.IsPathRooted(connectionStringBuilder.DataSource))
         {
             connectionStringBuilder.DataSource = Path.GetFullPath(
                 connectionStringBuilder.DataSource,
                 contentRootPath);
         }
+
         var databaseDirectory =
             Path.GetDirectoryName(connectionStringBuilder.DataSource)
             ?? throw new InvalidOperationException("The Mahjong database path has no parent directory.");

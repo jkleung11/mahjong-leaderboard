@@ -35,7 +35,7 @@ public sealed class MahjongDbContext : DbContext
         modelBuilder.Entity<PlayGroupMember>(member =>
         {
             member.HasIndex(m => new { m.PlayGroupId, m.PlayerId }).IsUnique();
-            
+
             member.HasOne(m => m.PlayGroup)
                 .WithMany(g => g.Members)
                 .HasForeignKey(m => m.PlayGroupId)
@@ -60,7 +60,7 @@ public sealed class MahjongDbContext : DbContext
                 .WithOne(p => p.Game)
                 .HasForeignKey(p => p.GameId)
                 .OnDelete(DeleteBehavior.Cascade);
-            
+
             game.HasOne(g => g.PlayGroup)
                 .WithMany(g => g.Games)
                 .HasForeignKey(g => g.PlayGroupId)

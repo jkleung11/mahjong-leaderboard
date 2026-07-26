@@ -3,7 +3,7 @@ namespace Mahjong.Api.Models;
 public sealed class PlayGroupMember
 {
     public int Id { get; set; }
-    
+
     public int PlayGroupId { get; set; }
     public PlayGroup PlayGroup { get; set; } = null!;
 
